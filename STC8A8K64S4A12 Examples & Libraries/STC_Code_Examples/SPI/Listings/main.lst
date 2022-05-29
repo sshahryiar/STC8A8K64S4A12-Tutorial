@@ -1,0 +1,411 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2020 00:12:05 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\My_Libraries\Device Heade
+                    -r Files;.\My_Libraries\LCD;.\My_Libraries\DS3234) DEBUG OBJECTEXTEND PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects
+                    -\main.obj)
+
+line level    source
+
+   1          #include "STC8xxx.h"
+   2          #include "BSP.h"
+   3          #include "LCD.c"
+   4          #include "lcd_print.c"
+   5          #include "DS3234.c"
+   6          
+   7          
+   8          #define SET           1
+   9          #define INC           2
+  10          #define SAVE          3
+  11          
+  12          #define keypad_dly    10
+  13          #define disp_dly      90
+  14          
+  15          
+  16          void setup(void);
+  17          unsigned char get_keypad(void);
+  18          void display_value(unsigned char y_pos, unsigned char x_pos, unsigned char value);
+  19          void show_temperature();
+  20          void display_time(void);
+  21          void get_date_time_data(void);
+  22          unsigned char change_value(unsigned char y_pos, unsigned char x_pos, unsigned char value, unsigned char ma
+             -x_value, unsigned char min_value);
+  23          void setting(void);
+  24          void show_day(unsigned char value);
+  25          
+  26          
+  27          void main(void)
+  28          {
+  29   1      
+  30   1        setup();
+  31   1        
+  32   1        
+  33   1        while(1)
+  34   1        {
+  35   2          P55_toggle;
+  36   2          setting();
+  37   2          get_date_time_data();
+  38   2          show_temperature();
+  39   2          display_time();
+  40   2          delay_ms(200);
+  41   2        };
+  42   1      }
+  43          
+  44          
+  45          void setup(void)
+  46          {
+  47   1        CLK_set_sys_clk(IRC_24M, 2, MCLK_SYSCLK_no_output, MCLK_out_P54);
+  48   1      
+  49   1        P40_input_mode;
+  50   1        P41_input_mode;
+  51   1        P42_input_mode;
+  52   1        
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2020 00:12:05 PAGE 2   
+
+  53   1        P55_open_drain_mode;
+  54   1        
+  55   1        DS3234_init();
+  56   1      
+  57   1        LCD_init();
+  58   1        LCD_clear_home();
+  59   1        load_custom_symbol();
+  60   1      }
+  61          
+  62          
+  63          unsigned char get_keypad()
+  64          {
+  65   1        if(!P40_get_input)
+  66   1        {
+  67   2          delay_ms(keypad_dly);
+  68   2          return SET;
+  69   2        }
+  70   1        
+  71   1        else if(!P41_get_input)
+  72   1        {
+  73   2          delay_ms(keypad_dly);
+  74   2          return INC;
+  75   2        }
+  76   1        
+  77   1        else if(!P42_get_input)
+  78   1        {
+  79   2          delay_ms(keypad_dly);
+  80   2          return SAVE;
+  81   2        }
+  82   1        
+  83   1        else
+  84   1        {
+  85   2          return 0;
+  86   2        }
+  87   1      }
+  88          
+  89          
+  90          void display_value(unsigned char y_pos, unsigned char x_pos, unsigned char value)
+  91          {
+  92   1        unsigned char ch = 0x00;
+  93   1      
+  94   1        ch = (value / 10);
+  95   1        LCD_goto((x_pos - 1), (y_pos - 1));
+  96   1        LCD_putchar((ch + 0x30));
+  97   1        ch = (value % 10);
+  98   1        LCD_goto(x_pos, (y_pos - 1));
+  99   1        LCD_putchar((ch + 0x30));
+ 100   1      }
+ 101          
+ 102          
+ 103          void display_time()
+ 104          {
+ 105   1        display_value(1, 1, hr);
+ 106   1        LCD_goto(2, 0);
+ 107   1        LCD_putstr(":");
+ 108   1        display_value(1, 4, min);
+ 109   1        LCD_goto(5, 0);
+ 110   1        LCD_putstr(":");
+ 111   1        
+ 112   1        display_value(1, 7, s);
+ 113   1      
+ 114   1        switch(hr_format)
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2020 00:12:05 PAGE 3   
+
+ 115   1        {
+ 116   2          case hr12:
+ 117   2          {
+ 118   3            switch(ampm)
+ 119   3            {
+ 120   4              case pm:
+ 121   4              {
+ 122   5                LCD_goto(9, 0);
+ 123   5                LCD_putstr("PM");
+ 124   5                break;
+ 125   5              }
+ 126   4              default:
+ 127   4              {
+ 128   5                LCD_goto(9, 0);
+ 129   5                LCD_putstr("AM");
+ 130   5                break;
+ 131   5              }
+ 132   4            }
+ 133   3            break;
+ 134   3          }
+ 135   2          default:
+ 136   2          {
+ 137   3            LCD_goto(9, 0);
+ 138   3            LCD_putstr("  ");
+ 139   3            break;
+ 140   3          }
+ 141   2        }
+ 142   1      
+ 143   1        display_value(2, 1, dt);
+ 144   1        LCD_goto(2, 1);
+ 145   1        LCD_putstr("/");
+ 146   1        display_value(2, 4, mt);
+ 147   1        LCD_goto(5, 1);
+ 148   1        LCD_putstr("/");
+ 149   1        display_value(2, 7, yr);
+ 150   1        show_day(dy);
+ 151   1      }
+ 152          
+ 153          
+ 154          void show_temperature()
+ 155          {
+ 156   1        float t = 0;
+ 157   1        unsigned char temp = 0;
+ 158   1      
+ 159   1        t = DS3234_get_temp();
+ 160   1        
+ 161   1        temp = t;
+ 162   1        display_value(2, 10, temp);
+ 163   1        LCD_goto(11, 1);
+ 164   1        LCD_putstr(".");
+ 165   1        temp = ((t - temp) * 100);
+ 166   1        display_value(2, 13, temp);
+ 167   1        print_symbol(14, 1, 0);
+ 168   1        LCD_goto(15, 1);
+ 169   1        LCD_putstr("C");
+ 170   1      }
+ 171          
+ 172          
+ 173          void get_date_time_data()
+ 174          {
+ 175   1        DS3234_get_date();
+ 176   1        DS3234_get_time(hr_format);
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2020 00:12:05 PAGE 4   
+
+ 177   1      }
+ 178          
+ 179          
+ 180          unsigned char change_value(unsigned char y_pos, unsigned char x_pos, unsigned char value, unsigned char ma
+             -x_value, unsigned char min_value)
+ 181          {
+ 182   1        while(TRUE)
+ 183   1        {
+ 184   2          if(get_keypad() == INC)
+ 185   2          {
+ 186   3            value++;
+ 187   3          }
+ 188   2          
+ 189   2          if(value > max_value)
+ 190   2          {
+ 191   3            value = min_value;
+ 192   3          }
+ 193   2      
+ 194   2          LCD_goto((x_pos - 1), (y_pos - 1));
+ 195   2          LCD_putstr("  ");    
+ 196   2          delay_ms(disp_dly);
+ 197   2          
+ 198   2          display_value(y_pos, x_pos, value);
+ 199   2          delay_ms(disp_dly);
+ 200   2          
+ 201   2          if(get_keypad() == SAVE)
+ 202   2          {
+ 203   3            while(get_keypad() == SAVE);
+ 204   3            return value;
+ 205   3          }
+ 206   2        }
+ 207   1      }
+ 208          
+ 209          
+ 210          void setting()
+ 211          {
+ 212   1           bit set_cmd;
+ 213   1           unsigned char tmp = 0;
+ 214   1      
+ 215   1           set_cmd = 0;
+ 216   1           if(get_keypad() == SET)
+ 217   1           {
+ 218   2               while(get_keypad() == SET);
+ 219   2               set_cmd = 1;
+ 220   2           }
+ 221   1           
+ 222   1           while(set_cmd)
+ 223   1           {
+ 224   2             while(1)
+ 225   2             {
+ 226   3               if(get_keypad() == INC)
+ 227   3               {
+ 228   4                 tmp++;
+ 229   4               }
+ 230   3               if(tmp > 2)
+ 231   3               {
+ 232   4                 tmp = 0;
+ 233   4               }
+ 234   3                 
+ 235   3                 
+ 236   3               LCD_goto(9, 0);
+ 237   3               LCD_putstr(" ");
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2020 00:12:05 PAGE 5   
+
+ 238   3                 
+ 239   3               delay_ms(disp_dly);
+ 240   3               switch(tmp)
+ 241   3               {
+ 242   4                  case 1:
+ 243   4                  {
+ 244   5                    LCD_goto(9, 0);
+ 245   5                    LCD_putstr("AM");                    
+ 246   5                    ampm = am;
+ 247   5                    hr_format = hr12;
+ 248   5                    break;
+ 249   5                  }
+ 250   4               
+ 251   4                  case 2:
+ 252   4                  {
+ 253   5                    LCD_goto(9, 0);
+ 254   5                    LCD_putstr("PM"); 
+ 255   5                    ampm = pm;
+ 256   5                    hr_format = hr12;
+ 257   5                    break;
+ 258   5                  }
+ 259   4      
+ 260   4                  default:
+ 261   4                  {
+ 262   5                    LCD_goto(9, 0);
+ 263   5                    LCD_putstr("24"); 
+ 264   5                    hr_format = hr24;
+ 265   5                    break;
+ 266   5                  }
+ 267   4                }
+ 268   3      
+ 269   3                delay_ms(disp_dly);
+ 270   3                 
+ 271   3                if(get_keypad() == SAVE)
+ 272   3                {
+ 273   4                  break;
+ 274   4                }
+ 275   3               }
+ 276   2               s = change_value(1, 7, s, 59, 0);
+ 277   2               min = change_value(1, 4, min, 59, 0);
+ 278   2               
+ 279   2               switch(hr_format)
+ 280   2               {
+ 281   3                 case hr12:
+ 282   3                 {
+ 283   4                   hr = change_value(1, 1, hr, 12, 1);
+ 284   4                   break;
+ 285   4                 }
+ 286   3                 default:
+ 287   3                 {
+ 288   4                   hr = change_value(1, 1, hr, 23, 0);
+ 289   4                   break;
+ 290   4                 }
+ 291   3               }
+ 292   2      
+ 293   2               dt = change_value(2, 1, dt, 31, 1);
+ 294   2               mt = change_value(2, 4, mt, 12, 1);
+ 295   2               yr = change_value(2, 7, yr, 99, 0);
+ 296   2      
+ 297   2               tmp = dy;
+ 298   2               while(1)
+ 299   2               {
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2020 00:12:05 PAGE 6   
+
+ 300   3                 if(get_keypad() == INC)
+ 301   3                 {
+ 302   4                   tmp++;
+ 303   4                 }
+ 304   3                 if(tmp > 7)
+ 305   3                 {
+ 306   4                   tmp = 1;
+ 307   4                 }
+ 308   3      
+ 309   3                
+ 310   3                 LCD_goto(13, 0);
+ 311   3                 LCD_putstr("    "); 
+ 312   3                 delay_ms(disp_dly);
+ 313   3                 show_day(tmp);
+ 314   3                 delay_ms(disp_dly);
+ 315   3      
+ 316   3                 if(get_keypad() == SAVE)
+ 317   3                 {
+ 318   4                   dy = tmp;
+ 319   4                   break;
+ 320   4                 }
+ 321   3               }
+ 322   2               
+ 323   2               DS3234_set_time(hr, min, s, ampm, hr_format);
+ 324   2               DS3234_set_date(dy, dt, mt, yr);
+ 325   2               set_cmd = 0;
+ 326   2           }
+ 327   1      }
+ 328          
+ 329          
+ 330          void show_day(unsigned char value)
+ 331          {
+ 332   1        LCD_goto(13, 0);
+ 333   1        
+ 334   1        switch(value)
+ 335   1        {
+ 336   2          case 1:
+ 337   2          {
+ 338   3            LCD_putstr("SUN"); 
+ 339   3            break;
+ 340   3          }
+ 341   2          case 2:
+ 342   2          {
+ 343   3            LCD_putstr("MON");
+ 344   3            break;
+ 345   3          }
+ 346   2          case 3:
+ 347   2          {
+ 348   3            LCD_putstr("TUE");
+ 349   3            break;
+ 350   3          }
+ 351   2          case 4:
+ 352   2          {
+ 353   3            LCD_putstr("WED");
+ 354   3            break;
+ 355   3          }
+ 356   2          case 5:
+ 357   2          {
+ 358   3            LCD_putstr("THR");
+ 359   3            break;
+ 360   3          }
+ 361   2          case 6:
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2020 00:12:05 PAGE 7   
+
+ 362   2          {
+ 363   3            LCD_putstr("FRI");
+ 364   3            break;
+ 365   3          }
+ 366   2          case 7:
+ 367   2          {
+ 368   3            LCD_putstr("SAT");
+ 369   3            break;
+ 370   3          }
+ 371   2        }
+ 372   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   6674    ----
+   CONSTANT SIZE    =     80    ----
+   XDATA SIZE       =      9     158
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

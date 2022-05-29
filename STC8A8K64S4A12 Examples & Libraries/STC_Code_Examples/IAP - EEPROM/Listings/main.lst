@@ -1,0 +1,115 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              04/27/2020 17:01:44 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\My_Libraries\Device Header File
+                    -s;.\My_Libraries\LCD) DEBUG OBJECTEXTEND PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "STC8xxx.h"
+   2          #include "BSP.h"
+   3          #include "LCD.c"
+   4          #include "lcd_print.c"
+   5          
+   6          
+   7          #define BASE_ADDRESS  0x0400
+   8          
+   9          
+  10          void setup(void);
+  11          
+  12          
+  13          void main(void)
+  14          {
+  15   1        unsigned char i = 0;
+  16   1      
+  17   1        setup();
+  18   1        
+  19   1        LCD_goto(0, 0); 
+  20   1        LCD_putstr("R Addr:");
+  21   1        LCD_goto(0, 1); 
+  22   1        LCD_putstr("R Data:");
+  23   1        
+  24   1        i = IAP_read(BASE_ADDRESS);
+  25   1        delay_ms(10);
+  26   1        print_I(11, 0, BASE_ADDRESS);
+  27   1        print_C(14, 1, i);
+  28   1          
+  29   1        delay_ms(2000);
+  30   1        
+  31   1        if(i == 0)
+  32   1        {
+  33   2          LCD_clear_home();
+  34   2          LCD_goto(0, 0); 
+  35   2          LCD_putstr("Performing Erase");
+  36   2          LCD_goto(0, 1); 
+  37   2          LCD_putstr("....");
+  38   2          IAP_erase(BASE_ADDRESS); 
+  39   2          delay_ms(1000);
+  40   2        } 
+  41   1        
+  42   1        LCD_clear_home();
+  43   1        delay_ms(100);
+  44   1        
+  45   1        LCD_goto(0, 0); 
+  46   1        LCD_putstr("W Addr:");
+  47   1        LCD_goto(0, 1); 
+  48   1        LCD_putstr("W Data:");
+  49   1      
+  50   1        i = (P1 & 0x03);
+  51   1        IAP_write(BASE_ADDRESS, i);
+  52   1        print_I(11, 0, BASE_ADDRESS);    
+  53   1        print_C(14, 1, i);
+  54   1      
+C51 COMPILER V9.60.0.0   MAIN                                                              04/27/2020 17:01:44 PAGE 2   
+
+  55   1        delay_ms(2000);
+  56   1        
+  57   1        LCD_clear_home();
+  58   1        delay_ms(100);
+  59   1        
+  60   1        LCD_goto(0, 0); 
+  61   1        LCD_putstr("R Addr:");
+  62   1        LCD_goto(0, 1); 
+  63   1        LCD_putstr("R Data:");
+  64   1        
+  65   1        i = IAP_read(BASE_ADDRESS);
+  66   1        delay_ms(10);
+  67   1        print_I(11, 0, BASE_ADDRESS);
+  68   1        print_C(14, 1, i);
+  69   1          
+  70   1        delay_ms(2000);
+  71   1        
+  72   1        
+  73   1        while(1)
+  74   1        {
+  75   2      
+  76   2        };
+  77   1      }
+  78          
+  79          
+  80          void setup(void)
+  81          {
+  82   1        CLK_set_sys_clk(IRC_24M, 2, MCLK_SYSCLK_div_1, MCLK_out_P54);
+  83   1      
+  84   1        P10_input_mode;
+  85   1        P11_input_mode;
+  86   1        
+  87   1        LCD_init();
+  88   1        LCD_clear_home();
+  89   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   4173    ----
+   CONSTANT SIZE    =     79    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----     116
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

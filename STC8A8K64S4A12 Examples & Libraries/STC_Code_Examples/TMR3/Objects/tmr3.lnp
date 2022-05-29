@@ -1,0 +1,7 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj" 
+TO ".\Objects\tmr3" 
+PRINT(".\Listings\tmr3.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 
+CODE( 0X0000-0XFFF8 )
+XDATA( 0X0000-0X1FFF )

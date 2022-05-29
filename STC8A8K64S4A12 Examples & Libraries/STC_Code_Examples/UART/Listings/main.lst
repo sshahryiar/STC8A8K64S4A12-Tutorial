@@ -1,0 +1,103 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2020 11:46:04 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\My_Libraries\Device Heade
+                    -r Files;.\My_Libraries\LCD;.\My_Libraries\HMC1022) DEBUG OBJECTEXTEND PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Object
+                    -s\main.obj)
+
+line level    source
+
+   1          #include "STC8xxx.h"
+   2          #include "BSP.h"
+   3          #include "LCD.c"
+   4          #include "lcd_print.c"
+   5          
+   6          
+   7          void setup(void);
+   8          
+   9          
+  10          void main(void)
+  11          {
+  12   1        unsigned char msg1[10] = {"MicroArena"};
+  13   1        unsigned char msg2[10] = {"SShahryiar"};
+  14   1        
+  15   1        char i = 0x00;
+  16   1        
+  17   1        char rcv_1 = 0x00;
+  18   1        char rcv_4 = 0x00;
+  19   1        
+  20   1        setup();
+  21   1      
+  22   1        LCD_goto(0, 0);
+  23   1        LCD_putstr("TXD1: ");
+  24   1        LCD_goto(10, 0);
+  25   1        LCD_putstr("RXD1: ");
+  26   1      
+  27   1        LCD_goto(0, 1);
+  28   1        LCD_putstr("TXD4: ");
+  29   1        LCD_goto(10, 1);
+  30   1        LCD_putstr("RXD4: ");
+  31   1      
+  32   1        while(1)
+  33   1        {   
+  34   2          for(i = 0; i < 10; i++)
+  35   2          {     
+  36   3            UART1_write_buffer(msg1[i]);
+  37   3            UART4_write_buffer(msg2[i]);  
+  38   3            
+  39   3            LCD_goto(5, 0);
+  40   3            LCD_putchar(msg1[i]);
+  41   3            LCD_goto(5, 1);
+  42   3            LCD_putchar(msg2[i]);
+  43   3            
+  44   3            rcv_1 = UART1_read_buffer();  
+  45   3            rcv_4 = UART4_read_buffer();
+  46   3      
+  47   3            LCD_goto(15, 0);
+  48   3            LCD_putchar(rcv_1);      
+  49   3            LCD_goto(15, 1);
+  50   3            LCD_putchar(rcv_4);
+  51   3            
+  52   3            delay_ms(900);
+  53   3          }
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2020 11:46:04 PAGE 2   
+
+  54   2        };
+  55   1      }
+  56          
+  57          
+  58          void setup(void)
+  59          {
+  60   1        CLK_set_sys_clk(IRC_24M, 2, MCLK_SYSCLK_no_output, MCLK_out_P54);
+  61   1        
+  62   1        UART1_pin_option(0xC0);
+  63   1        UART1_init(9600, \
+  64   1                   UART1_baud_source_TMR2, \
+  65   1                   UART1_timer_12T, \
+  66   1                   12000000);
+  67   1        
+  68   1        UART4_pin_option(0x04);
+  69   1        UART4_init(9600, \
+  70   1                   UART4_baud_source_TMR4, \
+  71   1                   UART4_timer_1T, \
+  72   1                   12000000);
+  73   1      
+  74   1        LCD_init();
+  75   1        LCD_clear_home();
+  76   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   5094    ----
+   CONSTANT SIZE    =     73    ----
+   XDATA SIZE       =   ----     145
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

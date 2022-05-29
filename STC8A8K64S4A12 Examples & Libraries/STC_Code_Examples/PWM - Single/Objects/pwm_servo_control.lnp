@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj" 
+TO ".\Objects\pwm_servo_control" 
+PRINT(".\Listings\pwm_servo_control.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

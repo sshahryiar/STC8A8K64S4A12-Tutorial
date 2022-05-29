@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj" 
+TO ".\Objects\pca_pwm_capture" 
+PRINT(".\Listings\pca_pwm_capture.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

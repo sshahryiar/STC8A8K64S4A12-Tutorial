@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj" 
+TO ".\Objects\alpha_lcd" 
+PRINT(".\Listings\alpha_lcd.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

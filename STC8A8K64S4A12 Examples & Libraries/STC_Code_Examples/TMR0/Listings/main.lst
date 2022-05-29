@@ -1,0 +1,171 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 11:47:08 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\My_Libraries\Device Heade
+                    -r Files;.\My_Libraries\LCD) DEBUG OBJECTEXTEND PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "STC8xxx.h"
+   2          #include "BSP.h"
+   3          #include "LCD.c"
+   4          #include "lcd_print.c"
+   5          
+   6          
+   7          #define sync_high     5850    //approx 1.3 * 4500us
+   8          #define sync_low      3150    //approx 0.7 * 4500us
+   9          #define one_high      2200    //approx 1.3 * (2250 - 562.5)us
+  10          #define one_low       1180    //approx 0.7 * (2250 - 562.5)us  
+  11          #define zero_high     732     //approx 1.3 * (1125 - 562.5)us
+  12          #define zero_low      394     //approx 0.7 * (1125 - 562.5)us
+  13          
+  14          
+  15          unsigned char bits = 0x00; 
+  16          unsigned char received = 0x00; 
+  17          
+  18          unsigned int frames[33];
+  19          
+  20          
+  21          void setup(void);
+  22          void erase_frames(void);
+  23          unsigned char decode(unsigned char start_pos, unsigned char end_pos);
+  24          void decode_NEC(unsigned char *addr, unsigned char *cmd);
+  25          
+  26          
+  27          void EXT_0_ISR(void)        
+  28          interrupt 0
+  29          {
+  30   1        frames[bits] = TMR0_get_counter(); 
+  31   1        bits++; 
+  32   1        TMR0_start; 
+  33   1      
+  34   1        if(bits >= 33) 
+  35   1        { 
+  36   2          received = 1; 
+  37   2          _disable_global_interrupt; 
+  38   2          TMR0_stop; 
+  39   2        } 
+  40   1        
+  41   1        TMR0_load_counter_16(0x0000); 
+  42   1      }
+  43          
+  44          
+  45          void main(void)
+  46          {
+  47   1        unsigned char addr = 0x00;
+  48   1        unsigned char cmd = 0x00;
+  49   1          
+  50   1        setup();
+  51   1      
+  52   1        LCD_goto(1, 0); 
+  53   1        LCD_putstr("NEC IR Decoder"); 
+  54   1        LCD_goto(0, 1); 
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 11:47:08 PAGE 2   
+
+  55   1        LCD_putstr("Adr      Cmd");
+  56   1      
+  57   1        while(1)
+  58   1        {
+  59   2           if(received != FALSE)
+  60   2           {
+  61   3             decode_NEC(&addr, &cmd);
+  62   3             
+  63   3             print_C(3, 1, addr); 
+  64   3             print_C(12, 1, cmd); 
+  65   3             
+  66   3             delay_ms(100);
+  67   3             
+  68   3             erase_frames();
+  69   3             _enable_global_interrupt;
+  70   3           }
+  71   2        };
+  72   1      }
+  73          
+  74          
+  75          void setup(void)
+  76          {
+  77   1        CLK_set_sys_clk(IRC_24M, 2, MCLK_SYSCLK_div_1, MCLK_SYSCLK_no_output);
+  78   1        
+  79   1        erase_frames();
+  80   1        
+  81   1        TMR0_setup(TMR0_16_bit_non_auto_reload, \
+  82   1                   TMR0_sysclk, \
+  83   1                   TMR0_clk_prescalar_12T, \
+  84   1                   TMR0_ext_gate, \
+  85   1                   TMR0_no_clk_out);
+  86   1        
+  87   1        EXT_0_priority_0;
+  88   1        EXT_0_falling_edge_detection_only;
+  89   1        _enable_EXT_0_interrupt;
+  90   1        _enable_global_interrupt;
+  91   1      
+  92   1        LCD_init();
+  93   1        LCD_clear_home();
+  94   1      }
+  95          
+  96          
+  97          void erase_frames(void)
+  98          {
+  99   1        for(bits = 0; bits < 33; bits++)
+ 100   1        {
+ 101   2          frames[bits] = 0x0000;
+ 102   2        }
+ 103   1      
+ 104   1        TMR0_load_counter_16(0x0000);
+ 105   1        
+ 106   1        received = 0;
+ 107   1        bits = 0;
+ 108   1      }
+ 109          
+ 110          
+ 111          unsigned char decode(unsigned char start_pos, unsigned char end_pos)
+ 112          {
+ 113   1        unsigned char value = 0;
+ 114   1      
+ 115   1        for(bits = start_pos; bits <= end_pos; bits++)
+ 116   1        {
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 11:47:08 PAGE 3   
+
+ 117   2          value <<= 1;
+ 118   2          
+ 119   2          if((frames[bits] >= one_low) && (frames[bits] <= one_high))
+ 120   2          {
+ 121   3            value |= 1;
+ 122   3          }
+ 123   2          
+ 124   2          else if((frames[bits] >= zero_low) && (frames[bits] <= zero_high))
+ 125   2          {
+ 126   3            value |= 0;
+ 127   3          }
+ 128   2          
+ 129   2          else if((frames[bits] >= sync_low) && (frames[bits] <= sync_high))
+ 130   2          {
+ 131   3            return 0xFF;
+ 132   3          }
+ 133   2        }
+ 134   1      
+ 135   1        return value;
+ 136   1      }
+ 137          
+ 138          
+ 139          void decode_NEC(unsigned char *addr, unsigned char *cmd)
+ 140          {
+ 141   1        *addr = decode(2, 9);
+ 142   1        *cmd = decode(18, 25);
+ 143   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   5123    ----
+   CONSTANT SIZE    =     53    ----
+   XDATA SIZE       =     68     123
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

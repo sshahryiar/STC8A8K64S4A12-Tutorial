@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj" 
+TO ".\Objects\i2c_dht12" 
+PRINT(".\Listings\i2c_dht12.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

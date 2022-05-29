@@ -1,0 +1,8 @@
+#include "GPIO_P0.h"
+#include "GPIO_P1.h"
+#include "GPIO_P2.h"
+#include "GPIO_P3.h"
+#include "GPIO_P4.h"
+#include "GPIO_P5.h"
+#include "GPIO_P6.h"
+#include "GPIO_P7.h"

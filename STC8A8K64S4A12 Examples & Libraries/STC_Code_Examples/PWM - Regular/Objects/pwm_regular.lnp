@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj" 
+TO ".\Objects\pwm_regular" 
+PRINT(".\Listings\pwm_regular.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

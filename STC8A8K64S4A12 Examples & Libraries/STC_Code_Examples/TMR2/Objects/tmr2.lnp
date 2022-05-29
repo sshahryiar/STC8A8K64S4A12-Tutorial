@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj" 
+TO ".\Objects\tmr2" 
+PRINT(".\Listings\tmr2.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

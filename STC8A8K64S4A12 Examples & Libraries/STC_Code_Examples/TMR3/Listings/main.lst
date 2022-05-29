@@ -1,0 +1,605 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 22:16:33 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\My_Libraries\Device Header File
+                    -s;.\My_Libraries\LCD) DEBUG OBJECTEXTEND PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "STC8xxx.h"
+   2          #include "BSP.h"
+   3          #include "LCD.c"
+   4          
+   5          
+   6          #define required_time           1000
+   7          #define max_tmr_cnt             0xFFFF
+   8          #define tmr_val                 (max_tmr_cnt - required_time)
+   9          
+  10          #define PM                      0
+  11          #define AM                      1
+  12          
+  13          #define ETR                     1
+  14          #define INC                     2
+  15          #define DEC                     3
+  16          #define ESC                     4
+  17          #define NON                     0
+  18          
+  19          #define ETR_button              !P10_get_input
+  20          #define INC_button              !P11_get_input
+  21          #define DEC_button              !P12_get_input
+  22          #define ESC_button              !P13_get_input
+  23          
+  24          
+  25          unsigned char dow = 1;
+  26          unsigned char s = 10;
+  27          unsigned char hr = 10;
+  28          unsigned char min = 10;
+  29          unsigned char date = 1;
+  30          unsigned char month = 1;
+  31          unsigned char toggle = 0;
+  32          unsigned char leap_year = 0;
+  33          unsigned char ampm = AM;
+  34          
+  35          unsigned int ms = 0;
+  36          unsigned int year = 2000;
+  37          
+  38          
+  39          void setup(void);
+  40          void LCD_print_value(unsigned char x_pos, unsigned char y_pos, unsigned char value);
+  41          void LCD_print_int_value(unsigned char x_pos, unsigned char y_pos, unsigned int value);
+  42          void display_time(void);
+  43          void AM_PM_disp(unsigned char state);
+  44          void dow_disp(unsigned char dow);
+  45          unsigned char get_buttons(void);
+  46          unsigned char set_value(unsigned char x_pos, unsigned char y_pos, signed char value, unsigned char max, un
+             -signed char min, unsigned char type);
+  47          void setup_RTC(void);
+  48          
+  49          
+  50          void TMR_3_ISR(void)        
+  51          interrupt 19
+  52          {
+  53   1        ms++;
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 22:16:33 PAGE 2   
+
+  54   1        if(ms > 999)
+  55   1        {  
+  56   2          s++;
+  57   2          ms = 0;
+  58   2          toggle ^= 0x01;
+  59   2          P54_toggle;
+  60   2        }
+  61   1      
+  62   1        if(s > 59)
+  63   1        {
+  64   2          s = 0;
+  65   2          min++;
+  66   2      
+  67   2          if(min > 59)
+  68   2          {
+  69   3            min = 0;
+  70   3            hr++;
+  71   3      
+  72   3            if(hr > 12)
+  73   3            {
+  74   4                hr = 1;
+  75   4            }
+  76   3      
+  77   3            if((hr == 12) && (min == 0) && (s == 0))
+  78   3            {
+  79   4                ampm ^= 1;
+  80   4      
+  81   4                if(ampm == AM)
+  82   4                {
+  83   5                  date++;
+  84   5                  dow++;
+  85   5                }
+  86   4      
+  87   4                if(dow > 7)
+  88   4                {
+  89   5                  dow = 1;
+  90   5                }
+  91   4      
+  92   4                if((month == 1) || (month == 3) || (month == 5) || (month == 7) || (month == 8) || (month == 10)
+             - || (month == 12))
+  93   4                {
+  94   5                  if(date > 31)
+  95   5                  {
+  96   6                    date = 1;
+  97   6                    month++;
+  98   6                  }
+  99   5                }
+ 100   4      
+ 101   4                else if((month == 4) || (month == 6) || (month == 9) || (month == 11))
+ 102   4                {
+ 103   5                  if(date > 30)
+ 104   5                  {
+ 105   6                    date = 1;
+ 106   6                    month++;
+ 107   6                  }
+ 108   5                }
+ 109   4      
+ 110   4                else
+ 111   4                {
+ 112   5                  if((year % 4) == 0)
+ 113   5                  {
+ 114   6                    if((year % 100) == 0)
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 22:16:33 PAGE 3   
+
+ 115   6                    {
+ 116   7                      if((year % 400) == 0)
+ 117   7                      {
+ 118   8                        leap_year = 1;
+ 119   8                      }
+ 120   7      
+ 121   7                      else
+ 122   7                      {
+ 123   8                        leap_year = 0;
+ 124   8                      }
+ 125   7                    }
+ 126   6      
+ 127   6                    else
+ 128   6                    {
+ 129   7                      leap_year = 1;
+ 130   7                    }
+ 131   6                  }
+ 132   5      
+ 133   5                  else
+ 134   5                  {
+ 135   6                      leap_year = 0;
+ 136   6                  }
+ 137   5      
+ 138   5                  if((leap_year) && (date > 29))
+ 139   5                  {
+ 140   6                     date = 1;
+ 141   6                     month++;
+ 142   6                  }
+ 143   5      
+ 144   5                  else if((!leap_year) && (date > 28))
+ 145   5                  {
+ 146   6                     date = 1;
+ 147   6                     month++;
+ 148   6                  }
+ 149   5              }
+ 150   4      
+ 151   4              if(month > 12)
+ 152   4              {
+ 153   5                month = 1;
+ 154   5                year++;
+ 155   5              }
+ 156   4            }
+ 157   3          }
+ 158   2        }
+ 159   1        
+ 160   1        clear_TMR_3_overflow_flag;
+ 161   1      }
+ 162          
+ 163          
+ 164          void main(void)
+ 165          {
+ 166   1        setup();
+ 167   1      
+ 168   1        while(1)
+ 169   1        {
+ 170   2          if(get_buttons() == ESC)
+ 171   2          {
+ 172   3              while(get_buttons() == ESC);
+ 173   3              setup_RTC();
+ 174   3          }
+ 175   2          else
+ 176   2          {
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 22:16:33 PAGE 4   
+
+ 177   3              display_time();
+ 178   3          }
+ 179   2        };
+ 180   1      }
+ 181          
+ 182          
+ 183          void setup(void)
+ 184          {
+ 185   1        CLK_set_sys_clk(IRC_24M, 2, MCLK_SYSCLK_no_output, MCLK_out_P54);
+ 186   1      
+ 187   1        P10_input_mode;
+ 188   1        P11_input_mode;
+ 189   1        P12_input_mode;
+ 190   1        P13_input_mode;
+ 191   1        
+ 192   1        P54_push_pull_mode;
+ 193   1      
+ 194   1        LCD_init();
+ 195   1        LCD_clear_home();
+ 196   1      
+ 197   1        TMR3_setup(TMR3_sysclk, TMR3_clk_prescalar_12T, TMR3_no_clk_out);
+ 198   1        TMR3_load_counter_16(tmr_val);
+ 199   1        TMR3_start;
+ 200   1        _enable_TMR_3_interrupt;
+ 201   1        _enable_global_interrupt;
+ 202   1      }
+ 203          
+ 204          
+ 205          void LCD_print_value(unsigned char x_pos, unsigned char y_pos, unsigned char value)
+ 206          {
+ 207   1        LCD_goto(x_pos, y_pos);
+ 208   1        LCD_putchar((value / 10) + 0x30);
+ 209   1        LCD_goto((x_pos + 1), y_pos);
+ 210   1        LCD_putchar((value % 10) + 0x30);
+ 211   1      }
+ 212          
+ 213          
+ 214          void LCD_print_int_value(unsigned char x_pos, unsigned char y_pos, unsigned int value)
+ 215          {
+ 216   1        unsigned char temp = 0x00;
+ 217   1      
+ 218   1        temp = (value / 100);
+ 219   1        LCD_print_value(x_pos, y_pos, temp);
+ 220   1      
+ 221   1        temp = (value % 100);
+ 222   1        LCD_print_value((x_pos + 2), y_pos, temp);
+ 223   1      
+ 224   1      }
+ 225          
+ 226          
+ 227          void display_time(void)
+ 228          {
+ 229   1        LCD_print_value(2, 0, hr);
+ 230   1        LCD_print_value(5, 0, min);
+ 231   1        LCD_print_value(8, 0, s);
+ 232   1      
+ 233   1        switch(toggle)
+ 234   1        {
+ 235   2          case 1:
+ 236   2          {
+ 237   3            LCD_goto(4, 0);
+ 238   3            LCD_putchar(':');
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 22:16:33 PAGE 5   
+
+ 239   3            LCD_goto(7, 0);
+ 240   3            LCD_putchar(':');
+ 241   3            break;
+ 242   3          }
+ 243   2          default:
+ 244   2          {
+ 245   3            LCD_goto(4, 0);
+ 246   3            LCD_putchar(' ');
+ 247   3            LCD_goto(7, 0);
+ 248   3            LCD_putchar(' ');
+ 249   3            break;
+ 250   3          }
+ 251   2        }
+ 252   1      
+ 253   1        AM_PM_disp(ampm);
+ 254   1        dow_disp(dow);
+ 255   1      
+ 256   1        LCD_print_value(6, 1, date);
+ 257   1      
+ 258   1        LCD_goto(8, 1);
+ 259   1        LCD_putchar('.');
+ 260   1        LCD_print_value(9, 1, month);
+ 261   1      
+ 262   1        LCD_goto(11, 1);
+ 263   1        LCD_putchar('.');
+ 264   1        LCD_print_int_value(12, 1, year);
+ 265   1      }
+ 266          
+ 267          
+ 268          void dow_disp(unsigned char dow)
+ 269          {
+ 270   1        LCD_goto(0, 1);
+ 271   1      
+ 272   1        switch(dow)
+ 273   1        {
+ 274   2          case 1:
+ 275   2          {
+ 276   3            LCD_putstr("MON");
+ 277   3            break;
+ 278   3          }
+ 279   2          case 2:
+ 280   2          {
+ 281   3            LCD_putstr("TUE");
+ 282   3            break;
+ 283   3          }
+ 284   2          case 3:
+ 285   2          {
+ 286   3            LCD_putstr("WED");
+ 287   3            break;
+ 288   3          }
+ 289   2          case 4:
+ 290   2          {
+ 291   3            LCD_putstr("THR");
+ 292   3            break;
+ 293   3          }
+ 294   2          case 5:
+ 295   2          {
+ 296   3            LCD_putstr("FRI");
+ 297   3            break;
+ 298   3          }
+ 299   2          case 6:
+ 300   2          {
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 22:16:33 PAGE 6   
+
+ 301   3            LCD_putstr("SAT");
+ 302   3            break;
+ 303   3          }
+ 304   2          case 7:
+ 305   2          {
+ 306   3            LCD_putstr("SUN");
+ 307   3            break;
+ 308   3          }
+ 309   2          default:
+ 310   2          {
+ 311   3            LCD_putstr("   ");
+ 312   3            break;
+ 313   3          }
+ 314   2        }
+ 315   1      }
+ 316          
+ 317          
+ 318          void AM_PM_disp(unsigned char state)
+ 319          {
+ 320   1        LCD_goto(12, 0);
+ 321   1      
+ 322   1        switch(state)
+ 323   1        {
+ 324   2          case AM:
+ 325   2          {
+ 326   3            LCD_putstr("AM");
+ 327   3            break;
+ 328   3          }
+ 329   2          default:
+ 330   2          {
+ 331   3            LCD_putstr("PM");
+ 332   3            break;
+ 333   3          }
+ 334   2        }
+ 335   1      }
+ 336          
+ 337          
+ 338          unsigned char get_buttons(void)
+ 339          {
+ 340   1        if(ETR_button)
+ 341   1        {
+ 342   2          return ETR;
+ 343   2        }
+ 344   1      
+ 345   1        else if(INC_button)
+ 346   1        {
+ 347   2          return INC;
+ 348   2        }
+ 349   1      
+ 350   1        else if(DEC_button)
+ 351   1        {
+ 352   2          return DEC;
+ 353   2        }
+ 354   1      
+ 355   1        else if(ESC_button)
+ 356   1        {
+ 357   2          return ESC;
+ 358   2        }
+ 359   1      
+ 360   1        else
+ 361   1        {
+ 362   2          return NON;
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 22:16:33 PAGE 7   
+
+ 363   2        }
+ 364   1      }
+ 365          
+ 366          
+ 367          unsigned char set_value(unsigned char x_pos, unsigned char y_pos, signed char value, unsigned char max, un
+             -signed char min, unsigned char type)
+ 368          {
+ 369   1        unsigned char tgl = 0;
+ 370   1      
+ 371   1        while(1)
+ 372   1        {
+ 373   2          tgl ^= 0x01;
+ 374   2          delay_ms(90);
+ 375   2      
+ 376   2          if(get_buttons() == INC)
+ 377   2          {
+ 378   3              value++;
+ 379   3          }
+ 380   2      
+ 381   2          if(value > max)
+ 382   2          {
+ 383   3              value = min;
+ 384   3          }
+ 385   2      
+ 386   2          if(get_buttons() == DEC)
+ 387   2          {
+ 388   3              value--;
+ 389   3          }
+ 390   2      
+ 391   2          if(value < min)
+ 392   2          {
+ 393   3              value = max;
+ 394   3          }
+ 395   2      
+ 396   2          switch(type)
+ 397   2          {
+ 398   3            case 1:
+ 399   3            {
+ 400   4              switch(tgl)
+ 401   4              {
+ 402   5                case 1:
+ 403   5                {
+ 404   6                  LCD_print_value(x_pos, y_pos, value);
+ 405   6                  break;
+ 406   6                }
+ 407   5      
+ 408   5                default:
+ 409   5                {
+ 410   6                  LCD_goto(x_pos, y_pos);
+ 411   6                  LCD_putstr("  ");
+ 412   6                  break;
+ 413   6                }
+ 414   5              }
+ 415   4      
+ 416   4              break;
+ 417   4            }
+ 418   3      
+ 419   3            case 2:
+ 420   3            {
+ 421   4              switch(tgl)
+ 422   4              {
+ 423   5                case 1:
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 22:16:33 PAGE 8   
+
+ 424   5                {
+ 425   6                  AM_PM_disp(value);
+ 426   6                  break;
+ 427   6                }
+ 428   5      
+ 429   5                default:
+ 430   5                {
+ 431   6                  LCD_goto(12, 0);
+ 432   6                  LCD_putstr("  ");
+ 433   6                  break;
+ 434   6                }
+ 435   5              }
+ 436   4      
+ 437   4              break;
+ 438   4            }
+ 439   3      
+ 440   3            default:
+ 441   3            {
+ 442   4              switch(tgl)
+ 443   4              {
+ 444   5                case 1:
+ 445   5                {
+ 446   6                  dow_disp(value);
+ 447   6                  break;
+ 448   6                }
+ 449   5                default:
+ 450   5                {
+ 451   6                  dow_disp(0);
+ 452   6                  break;
+ 453   6                }
+ 454   5              }
+ 455   4              break;
+ 456   4            }
+ 457   3          }
+ 458   2      
+ 459   2          if((get_buttons() == ETR) && (tgl == 1))
+ 460   2          {
+ 461   3             return value;
+ 462   3          }
+ 463   2        };
+ 464   1      }
+ 465          
+ 466          
+ 467          void setup_RTC(void)
+ 468          {
+ 469   1        unsigned int yr1 = 0;
+ 470   1        unsigned int yr2 = 0;
+ 471   1      
+ 472   1        TMR3_stop;
+ 473   1        _disable_TMR_3_interrupt;
+ 474   1      
+ 475   1        yr1 = (year / 100);
+ 476   1        yr2 = (year % 100);
+ 477   1      
+ 478   1        hr = set_value(2, 0, hr, 12, 1, 1);
+ 479   1        delay_ms(200);
+ 480   1        min = set_value(5, 0, min, 59, 0, 1);
+ 481   1        delay_ms(200);
+ 482   1        s = set_value(8, 0, s, 59, 0, 1);
+ 483   1        delay_ms(200);
+ 484   1        ampm = set_value(12, 0, ampm, 1, 0, 2);
+ 485   1        delay_ms(200);
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 22:16:33 PAGE 9   
+
+ 486   1        dow = set_value(0, 1, dow, 7, 1, 0);
+ 487   1        delay_ms(200);
+ 488   1        date = set_value(6, 1, date, 31, 1, 1);
+ 489   1        delay_ms(200);
+ 490   1        month = set_value(9, 1, month, 12, 1, 1);
+ 491   1        delay_ms(200);
+ 492   1        yr1 = set_value(12, 1, yr1, 99, 0, 1);
+ 493   1        delay_ms(200);
+ 494   1        yr2 = set_value(14, 1, yr2, 99, 0, 1);
+ 495   1        delay_ms(200);
+ 496   1      
+ 497   1        year = ((yr1 * 100) + yr2);
+ 498   1      
+ 499   1        if((month == 1) || (month == 3) || (month == 5) || (month == 7) || (month == 8) || (month == 10) || (mon
+             -th == 12))
+ 500   1        {
+ 501   2            if(date > 31)
+ 502   2            {
+ 503   3                date = 1;
+ 504   3            }
+ 505   2        }
+ 506   1      
+ 507   1        else if((month == 4) || (month == 6) || (month == 9) || (month == 11))
+ 508   1        {
+ 509   2            if(date > 30)
+ 510   2            {
+ 511   3                date = 1;
+ 512   3            }
+ 513   2        }
+ 514   1      
+ 515   1        else
+ 516   1        {
+ 517   2            if((year % 4) == 0)
+ 518   2            {
+ 519   3                if((year % 100) == 0)
+ 520   3                {
+ 521   4                    if((year % 400) == 0)
+ 522   4                    {
+ 523   5                        leap_year = 1;
+ 524   5                    }
+ 525   4      
+ 526   4                    else
+ 527   4                    {
+ 528   5                        leap_year = 0;
+ 529   5                    }
+ 530   4                }
+ 531   3      
+ 532   3                else
+ 533   3                {
+ 534   4                    leap_year = 1;
+ 535   4                }
+ 536   3            }
+ 537   2      
+ 538   2            else
+ 539   2            {
+ 540   3                leap_year = 0;
+ 541   3            }
+ 542   2      
+ 543   2            if((leap_year) && (date > 29))
+ 544   2            {
+ 545   3                 date = 1;
+ 546   3            }
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 22:16:33 PAGE 10  
+
+ 547   2      
+ 548   2            else if((!leap_year) && (date > 28))
+ 549   2            {
+ 550   3                 date = 1;
+ 551   3            }
+ 552   2        }
+ 553   1      
+ 554   1        ms = 0;
+ 555   1        TMR3_setup(TMR3_sysclk, TMR3_clk_prescalar_12T, TMR3_no_clk_out);
+ 556   1        TMR3_load_counter_16(tmr_val);
+ 557   1        TMR3_start;
+ 558   1        _enable_TMR_3_interrupt;
+ 559   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   3838    ----
+   CONSTANT SIZE    =     41    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     13      82
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj" 
+TO ".\Objects\soft_comm_ex_1" 
+PRINT(".\Listings\soft_comm_ex_1.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

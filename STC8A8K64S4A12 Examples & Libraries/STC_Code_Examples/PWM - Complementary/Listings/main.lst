@@ -1,0 +1,112 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              05/03/2020 04:22:27 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\My_Libraries\Device Header File
+                    -s) DEBUG OBJECTEXTEND PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "STC8xxx.h"
+   2          #include "BSP.h"
+   3          
+   4          
+   5          #define dead_time_cnt               1
+   6          #define pwm_max_cnt                 400 
+   7          
+   8          #define PB_1                        !P12_get_input
+   9          #define PB_2                        !P13_get_input
+  10          
+  11          
+  12          void setup(void);
+  13          void set_PWM_duty(signed int value);
+  14          
+  15          
+  16          void main(void)
+  17          { 
+  18   1        signed int duty = 0;
+  19   1        
+  20   1        setup();
+  21   1        
+  22   1        while(1)
+  23   1        {
+  24   2            if(PB_1)
+  25   2            {
+  26   3                duty += 10;
+  27   3                delay_ms(100);
+  28   3                
+  29   3                if(duty >= pwm_max_cnt)
+  30   3                {
+  31   4                  duty = pwm_max_cnt;
+  32   4                }
+  33   3            }
+  34   2            if(PB_2)
+  35   2            {
+  36   3                duty -= 10;
+  37   3                delay_ms(100);
+  38   3                
+  39   3                if(duty <= 0)
+  40   3                {
+  41   4                  duty = 0;
+  42   4                }
+  43   3            }
+  44   2            if(PB_1 || PB_2)
+  45   2            {
+  46   3              set_PWM_duty(duty);
+  47   3            }
+  48   2        };
+  49   1      }
+  50          
+  51          
+  52          void setup(void)
+  53          {
+  54   1        CLK_set_sys_clk(IRC_24M, 2, MCLK_SYSCLK_no_output, MCLK_out_P54);
+C51 COMPILER V9.60.0.0   MAIN                                                              05/03/2020 04:22:27 PAGE 2   
+
+  55   1        
+  56   1        P12_input_mode;
+  57   1        P13_input_mode;
+  58   1        
+  59   1        PWM_clk_set(PWM_clk_sys_PS, PWM_clk_ps_sys_clk_div_1);
+  60   1        
+  61   1        PWM_set_counter(pwm_max_cnt);
+  62   1        
+  63   1        PWM0_setup(PWM_pin_is_PWM_output, \
+  64   1                   PWM_init_lvl_low, \
+  65   1                   PWM_0_pin_P10, \
+  66   1                   PWM_level_normal);
+  67   1        
+  68   1        PWM1_setup(PWM_pin_is_PWM_output, \
+  69   1                   PWM_init_lvl_low, \
+  70   1                   PWM_1_pin_P11, \
+  71   1                   PWM_level_normal);   
+  72   1        
+  73   1        PWM_start_counter;
+  74   1      }
+  75          
+  76          
+  77          void set_PWM_duty(signed int value)
+  78          { 
+  79   1        PWM_set_PWM0_T1(value);
+  80   1        PWM_set_PWM0_T2(0);
+  81   1        
+  82   1        PWM_set_PWM1_T1(pwm_max_cnt - dead_time_cnt);
+  83   1        PWM_set_PWM1_T2(value + dead_time_cnt);     
+  84   1      }
+  85          
+  86          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2130    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      63
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

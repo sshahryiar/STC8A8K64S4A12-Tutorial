@@ -1,0 +1,56 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              05/04/2020 00:33:44 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\My_Libraries\Device Header File
+                    -s) DEBUG OBJECTEXTEND PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "STC8xxx.h"
+   2          #include "BSP.h"
+   3          
+   4          
+   5          void setup(void);
+   6          
+   7          
+   8          void main(void)
+   9          { 
+  10   1        setup();
+  11   1        
+  12   1        while(1)
+  13   1        {
+  14   2          P55_toggle;
+  15   2          
+  16   2          if(P52_get_input == 0)
+  17   2          {
+  18   3            delay_ms(400);
+  19   3          }
+  20   2          
+  21   2          delay_ms(200);
+  22   2        };
+  23   1      }
+  24          
+  25          
+  26          void setup(void)
+  27          {
+  28   1        P55_open_drain_mode;
+  29   1        
+  30   1        P52_input_mode;
+  31   1        P52_pull_up_enable;
+  32   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1919    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      64
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

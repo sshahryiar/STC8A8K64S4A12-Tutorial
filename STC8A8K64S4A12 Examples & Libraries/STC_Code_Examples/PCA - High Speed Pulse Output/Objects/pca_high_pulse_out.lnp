@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj" 
+TO ".\Objects\pca_high_pulse_out" 
+PRINT(".\Listings\pca_high_pulse_out.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

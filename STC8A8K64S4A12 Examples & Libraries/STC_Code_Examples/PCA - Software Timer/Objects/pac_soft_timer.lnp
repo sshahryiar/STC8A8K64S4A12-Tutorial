@@ -1,0 +1,5 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj" 
+TO ".\Objects\pac_soft_timer" 
+PRINT(".\Listings\pac_soft_timer.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

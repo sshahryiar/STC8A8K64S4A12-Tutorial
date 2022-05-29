@@ -1,0 +1,71 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 23:15:56 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\My_Libraries\Device Header File
+                    -s) DEBUG OBJECTEXTEND PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "STC8xxx.h"
+   2          #include "BSP.h"
+   3          
+   4          
+   5          void setup(void);
+   6          
+   7          
+   8          void main(void)
+   9          { 
+  10   1        setup();
+  11   1        
+  12   1        while(1)
+  13   1        {
+  14   2          if(TMR1_get_counter() >= 32768)
+  15   2          {
+  16   3            P55_high;
+  17   3          }
+  18   2          else
+  19   2          {
+  20   3            P55_low;
+  21   3          }    
+  22   2        };
+  23   1      }
+  24          
+  25          
+  26          void setup(void)
+  27          {
+  28   1        CLK_set_sys_clk(IRC_24M, 2, MCLK_SYSCLK_no_output, MCLK_out_P54);
+  29   1        
+  30   1        P34_push_pull_mode;
+  31   1       
+  32   1        P35_input_mode;
+  33   1        
+  34   1        P55_open_drain_mode;
+  35   1        
+  36   1        TMR1_setup(TMR1_16_bit_non_auto_reload, \
+  37   1                   TMR1_ext_T1_P35_clk, \
+  38   1                   TMR1_clk_prescalar_12T, \
+  39   1                   TMR1_int_gate, \
+  40   1                   TMR1_P34_clk_out);
+  41   1        
+  42   1        TMR1_load_counter_8(0x00, 0x00);
+  43   1        
+  44   1        TMR1_start;
+  45   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1960    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      57
+   IDATA SIZE       =   ----    ----
+C51 COMPILER V9.60.0.0   MAIN                                                              04/28/2020 23:15:56 PAGE 2   
+
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
